@@ -239,6 +239,14 @@ def notices_attachment_delete(id, file_id):
 def notices_delete(id):
     """공지사항 삭제"""
     notice = Notice.query.get_or_404(id)
+
+    # dist 폴더의 HTML 파일 삭제
+    import os
+    from config import Config
+    html_path = os.path.join(Config.DIST_DIR, 'notice', f'{id}.html')
+    if os.path.exists(html_path):
+        os.remove(html_path)
+
     db.session.delete(notice)
     db.session.commit()
 
@@ -435,6 +443,14 @@ def activities_edit(id):
 def activities_delete(id):
     """활동후기 삭제"""
     activity = ActivityPost.query.get_or_404(id)
+
+    # dist 폴더의 HTML 파일 삭제
+    import os
+    from config import Config
+    html_path = os.path.join(Config.DIST_DIR, 'activity', f'{id}.html')
+    if os.path.exists(html_path):
+        os.remove(html_path)
+
     db.session.delete(activity)
     db.session.commit()
 
@@ -583,6 +599,14 @@ def newsletters_edit(id):
 def newsletters_delete(id):
     """소식지 삭제"""
     newsletter = Newsletter.query.get_or_404(id)
+
+    # dist 폴더의 HTML 파일 삭제
+    import os
+    from config import Config
+    html_path = os.path.join(Config.DIST_DIR, 'newsletter', f'{id}.html')
+    if os.path.exists(html_path):
+        os.remove(html_path)
+
     db.session.delete(newsletter)
     db.session.commit()
 
