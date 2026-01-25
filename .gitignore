@@ -75,6 +75,8 @@ dist/uploads/
 # SSG 빌드 결과물 (HTML 파일들)
 dist/**/*.html
 dist/*.html
+dist/sitemap.xml
+dist/robots.txt
 
 # Build artifacts
 *.pyc

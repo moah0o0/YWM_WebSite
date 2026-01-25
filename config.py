@@ -18,11 +18,11 @@ class Config:
     # ============================================
     # 도메인 설정 (개발/배포 환경)
     # ============================================
-    # 정적 사이트가 배포될 도메인
-    STATIC_DOMAIN = os.environ.get('STATIC_DOMAIN', 'http://localhost:3000')
+    # 정적 사이트가 배포될 도메인 (프로덕션 기본값)
+    STATIC_DOMAIN = os.environ.get('STATIC_DOMAIN', 'https://withmigrant.or.kr')
 
-    # 동적 API/Admin이 배포될 도메인
-    API_DOMAIN = os.environ.get('API_DOMAIN', 'http://localhost:8000')
+    # 동적 API/Admin이 배포될 도메인 (프로덕션 기본값)
+    API_DOMAIN = os.environ.get('API_DOMAIN', 'https://admin.withmigrant.or.kr')
 
     # CORS 허용 도메인 (프로덕션)
     ALLOWED_ORIGINS = [

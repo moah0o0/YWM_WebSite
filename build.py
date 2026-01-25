@@ -549,6 +549,101 @@ def build_donation_complete(app):
         print("  ✓ donation-complete.html")
 
 
+def build_sitemap(app):
+    """사이트맵 생성 (sitemap.xml)"""
+    with app.app_context():
+        from datetime import datetime
+
+        urls = []
+        base_url = Config.STATIC_DOMAIN
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        # 정적 페이지
+        static_pages = [
+            ('', '1.0', 'daily'),  # 메인
+            ('/intro.html', '0.9', 'weekly'),  # 소개
+            ('/notice/', '0.8', 'daily'),  # 공지사항
+            ('/activity/', '0.8', 'daily'),  # 활동후기
+            ('/newsletter/', '0.8', 'weekly'),  # 소식지
+            ('/donation.html', '0.9', 'monthly'),  # 후원
+        ]
+
+        for path, priority, changefreq in static_pages:
+            urls.append({
+                'loc': base_url + path,
+                'lastmod': today,
+                'changefreq': changefreq,
+                'priority': priority
+            })
+
+        # 공지사항
+        notices = Notice.query.order_by(Notice.created_at.desc()).all()
+        for notice in notices:
+            urls.append({
+                'loc': f"{base_url}/notice/{notice.id}.html",
+                'lastmod': notice.updated_at.strftime('%Y-%m-%d') if notice.updated_at else notice.created_at.strftime('%Y-%m-%d'),
+                'changefreq': 'monthly',
+                'priority': '0.6'
+            })
+
+        # 활동후기
+        activities = ActivityPost.query.order_by(ActivityPost.created_at.desc()).all()
+        for post in activities:
+            urls.append({
+                'loc': f"{base_url}/activity/{post.id}.html",
+                'lastmod': post.updated_at.strftime('%Y-%m-%d') if post.updated_at else post.created_at.strftime('%Y-%m-%d'),
+                'changefreq': 'monthly',
+                'priority': '0.7'
+            })
+
+        # 소식지
+        newsletters = Newsletter.query.order_by(Newsletter.published_at.desc()).all()
+        for newsletter in newsletters:
+            urls.append({
+                'loc': f"{base_url}/newsletter/{newsletter.id}.html",
+                'lastmod': newsletter.published_at.strftime('%Y-%m-%d'),
+                'changefreq': 'yearly',
+                'priority': '0.6'
+            })
+
+        # XML 생성
+        xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+        xml_lines.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+
+        for url in urls:
+            xml_lines.append('  <url>')
+            xml_lines.append(f'    <loc>{url["loc"]}</loc>')
+            xml_lines.append(f'    <lastmod>{url["lastmod"]}</lastmod>')
+            xml_lines.append(f'    <changefreq>{url["changefreq"]}</changefreq>')
+            xml_lines.append(f'    <priority>{url["priority"]}</priority>')
+            xml_lines.append('  </url>')
+
+        xml_lines.append('</urlset>')
+
+        sitemap_content = '\n'.join(xml_lines)
+        sitemap_path = os.path.join(Config.DIST_DIR, 'sitemap.xml')
+
+        with open(sitemap_path, 'w', encoding='utf-8') as f:
+            f.write(sitemap_content)
+
+        print(f"  ✓ sitemap.xml ({len(urls)}개 URL)")
+
+
+def build_robots_txt():
+    """robots.txt 생성"""
+    robots_content = f"""User-agent: *
+Allow: /
+
+Sitemap: {Config.STATIC_DOMAIN}/sitemap.xml
+"""
+
+    robots_path = os.path.join(Config.DIST_DIR, 'robots.txt')
+    with open(robots_path, 'w', encoding='utf-8') as f:
+        f.write(robots_content)
+
+    print("  ✓ robots.txt")
+
+
 def main():
     parser = argparse.ArgumentParser(description='SSG 빌드 스크립트')
     parser.add_argument('--clean', action='store_true', help='dist 폴더 초기화 후 빌드')
@@ -583,6 +678,11 @@ def main():
     build_newsletter_detail(app)
     build_donation(app)
     build_donation_complete(app)
+
+    # SEO 파일 생성
+    print("\n[3/3] SEO 파일 생성")
+    build_sitemap(app)
+    build_robots_txt()
 
     # 완료
     elapsed = datetime.now() - start_time
