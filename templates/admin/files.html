@@ -116,9 +116,9 @@
                                 <span class="text-2xl">
                                     {% if file.mimetype and 'pdf' in file.mimetype %}📄
                                     {% elif file.mimetype and 'word' in file.mimetype %}📝
-                                    {% elif file.mimetype and 'excel' in file.mimetype or 'sheet' in file.mimetype %}📊
-                                    {% elif file.mimetype and 'powerpoint' in file.mimetype or 'presentation' in file.mimetype %}📊
-                                    {% elif file.mimetype and 'zip' in file.mimetype or 'compressed' in file.mimetype %}🗜️
+                                    {% elif file.mimetype and ('excel' in file.mimetype or 'sheet' in file.mimetype) %}📊
+                                    {% elif file.mimetype and ('powerpoint' in file.mimetype or 'presentation' in file.mimetype) %}📊
+                                    {% elif file.mimetype and ('zip' in file.mimetype or 'compressed' in file.mimetype) %}🗜️
                                     {% else %}📎
                                     {% endif %}
                                 </span>
