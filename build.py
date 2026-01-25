@@ -138,9 +138,17 @@ def normalize_seo(seo):
     # og_image를 절대 URL로 변환
     if 'og_image' in normalized:
         og_image = normalized['og_image']
-        # 상대 경로인 경우에만 STATIC_DOMAIN 추가
-        if og_image and not og_image.startswith(('http://', 'https://')):
-            normalized['og_image'] = Config.STATIC_DOMAIN + og_image
+        if og_image:
+            # 이미 STATIC_DOMAIN을 포함하고 있는지 확인 (중복 방지)
+            if Config.STATIC_DOMAIN in og_image:
+                # 이미 절대 URL로 변환됨 (그대로 사용)
+                normalized['og_image'] = og_image
+            elif og_image.startswith(('http://', 'https://')):
+                # 다른 도메인의 절대 URL (그대로 사용)
+                normalized['og_image'] = og_image
+            else:
+                # 상대 경로 (/uploads/... 등) -> 절대 URL로 변환
+                normalized['og_image'] = Config.STATIC_DOMAIN + og_image
 
     return normalized
 
