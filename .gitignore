@@ -72,5 +72,9 @@ tmp/
 # 업로드 파일 (보안상 제외, 서버에서 직접 관리)
 dist/uploads/
 
+# SSG 빌드 결과물 (HTML 파일들)
+dist/**/*.html
+dist/*.html
+
 # Build artifacts
 *.pyc
