@@ -37,7 +37,7 @@ jobs:
 
             # 빌드 실행 (SEO 업데이트 등 반영)
             echo "=== Building static site ==="
-            python build.py
+            python3 build.py
 
             # 권한 설정
             echo "=== Setting permissions ==="
