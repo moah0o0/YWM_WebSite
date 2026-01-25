@@ -27,13 +27,6 @@ Flask 기반 SSG(Static Site Generation) 하이브리드 시스템으로 구축�
 
 ## 서버 환경
 
-### Vultr VPS 사양
-- **플랜**: $12/월
-- **CPU**: 2 vCPU
-- **RAM**: 2 GB
-- **디스크**: 55 GB SSD
-- **트래픽**: 2 TB/월
-
 ### 서버 구성
 ```
 /var/www/migrant-yangsan/           # 프로젝트 루트
