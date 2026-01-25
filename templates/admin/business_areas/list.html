@@ -24,7 +24,6 @@
                 <th class="w-12"></th>
                 <th>이름</th>
                 <th>설명</th>
-                <th class="w-20 text-center">상태</th>
                 <th class="w-32 text-center">관리</th>
             </tr>
         </thead>
@@ -44,11 +43,6 @@
                 </td>
                 <td class="text-sm text-notion-text-secondary">{{ area.description or '-' }}</td>
                 <td class="text-center">
-                    <button onclick="toggleActive({{ area.id }})" id="status-{{ area.id }}" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded cursor-pointer hover:opacity-80 transition-opacity {% if area.is_active %}text-green-700 bg-green-100{% else %}text-gray-500 bg-gray-100{% endif %}">
-                        <span id="status-text-{{ area.id }}">{% if area.is_active %}활성{% else %}비활성{% endif %}</span>
-                    </button>
-                </td>
-                <td class="text-center">
                     <div class="flex items-center justify-center gap-2">
                         <a href="{{ url_for('admin.business_areas_edit', id=area.id) }}" class="text-xs text-blue-600 hover:underline">수정</a>
                         <span class="text-notion-text-muted">|</span>
@@ -58,7 +52,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="5" class="text-center py-12 text-notion-text-muted">
+                <td colspan="4" class="text-center py-12 text-notion-text-muted">
                     등록된 사업분야가 없습니다.
                 </td>
             </tr>
@@ -85,37 +79,6 @@ new Sortable(document.getElementById('sortable-list'), {
         });
     }
 });
-
-function toggleActive(id) {
-    fetch(`/business-areas/${id}/toggle-active`, {
-        method: 'POST',
-        headers: { 'HX-Request': 'true' }
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.text().then(text => {
-                throw new Error(`활성화 토글 실패 (${res.status}): ${text}`);
-            });
-        }
-        return res.json();
-    })
-    .then(data => {
-        const btn = document.getElementById(`status-${id}`);
-        const text = document.getElementById(`status-text-${id}`);
-
-        if (data.is_active) {
-            btn.className = 'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded cursor-pointer hover:opacity-80 transition-opacity text-green-700 bg-green-100';
-            text.textContent = '활성';
-        } else {
-            btn.className = 'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded cursor-pointer hover:opacity-80 transition-opacity text-gray-500 bg-gray-100';
-            text.textContent = '비활성';
-        }
-    })
-    .catch(err => {
-        console.error('상태 변경 오류:', err);
-        alert('상태 변경 중 오류가 발생했습니다: ' + err.message);
-    });
-}
 
 function deleteItem(id) {
     if (confirm('정말 삭제하시겠습니까?')) {

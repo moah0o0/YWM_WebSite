@@ -59,16 +59,6 @@
                        placeholder="이미지 URL" class="input-notion">
             </div>
         </div>
-
-        {% if area %}
-        <div>
-            <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" name="is_active" {{ 'checked' if area.is_active else '' }}
-                       class="w-4 h-4 text-notion-accent rounded border-notion-border">
-                <span class="text-sm text-notion-text">활성화</span>
-            </label>
-        </div>
-        {% endif %}
     </div>
 </form>
 {% endblock %}
