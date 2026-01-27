@@ -4,6 +4,7 @@ services:
     build: .
     restart: unless-stopped
     environment:
+      - TZ=Asia/Seoul
       - FLASK_DEBUG=False
       - SECRET_KEY=${SECRET_KEY:-change-this-secret-key}
       - STATIC_DOMAIN=${STATIC_DOMAIN:-http://localhost}
