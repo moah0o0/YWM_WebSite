@@ -26,3 +26,6 @@ EXPOSE 8000
 
 # Gunicorn으로 앱 실행
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "app:app"]
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8000/ || exit 1
