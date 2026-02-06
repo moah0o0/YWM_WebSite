@@ -5,6 +5,7 @@ from config import Config
 from models import db, File, SiteInfo, ActivityPhoto, BusinessArea, SponsorshipInfo
 from models import HistorySection, HistoryItem, Notice, ActivityPost, Newsletter, DonationApplication, ActivityCategory
 from models import AdminUser, BuildStatus
+from r2_storage import upload_to_r2, get_r2_url
 import os
 import uuid
 import logging
@@ -91,10 +92,15 @@ setup_build_triggers(app)
 # ==========================================
 @app.template_filter('fix_upload_urls')
 def fix_upload_urls(content):
-    """레거시 /static/uploads/ 경로를 /uploads/로 변환"""
+    """업로드 경로를 R2 공개 URL로 변환"""
     if not content:
         return content
-    return content.replace('/static/uploads/', '/uploads/')
+    r2_url = Config.R2_PUBLIC_URL
+    # 레거시 경로 변환: /static/uploads/ → R2 URL
+    content = content.replace('/static/uploads/', f'{r2_url}/')
+    # 현재 경로 변환: /uploads/ → R2 URL
+    content = content.replace('/uploads/', f'{r2_url}/')
+    return content
 
 
 # ==========================================
@@ -126,22 +132,15 @@ def allowed_file(filename):
 # ==========================================
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
-    """업로드 파일 서빙 (dist/uploads에서)"""
-    uploads_dir = os.path.join(app.root_path, 'dist', 'uploads')
-    return send_from_directory(uploads_dir, filename)
+    """업로드 파일 서빙 (R2로 리다이렉트)"""
+    return redirect(get_r2_url(filename))
 
 
 @app.route('/download/<int:file_id>')
 def download_file(file_id):
-    """파일 다운로드 - Content-Disposition 헤더 설정"""
+    """파일 다운로드 - R2로 리다이렉트"""
     file_record = File.query.get_or_404(file_id)
-    uploads_dir = os.path.join(app.root_path, 'dist', 'uploads')
-    return send_from_directory(
-        uploads_dir,
-        file_record.filename,
-        as_attachment=True,
-        download_name=file_record.original_filename
-    )
+    return redirect(get_r2_url(file_record.filename))
 
 
 # ==========================================
@@ -259,9 +258,9 @@ def api_upload():
         filename = f"{uuid.uuid4().hex}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
         filename = secure_filename(filename)
 
-        # 파일 저장 (uploads 폴더 바로 아래)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
+        # R2에 업로드
+        file_data = file.read()
+        upload_to_r2(file_data, filename, file.content_type)
 
         # File 레코드 생성
         file_record = File(
@@ -273,7 +272,7 @@ def api_upload():
         db.session.add(file_record)
         db.session.commit()
 
-        # URL 반환 (dist/uploads 기준)
+        # URL 반환 (기존 경로 유지 - 빌드 시 R2 URL로 변환)
         url = f'/uploads/{filename}'
         return jsonify({'url': url, 'filename': filename})
 

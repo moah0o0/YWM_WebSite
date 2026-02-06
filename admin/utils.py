@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from werkzeug.utils import secure_filename
 from flask import current_app
 from models import db, File
+from r2_storage import upload_to_r2, delete_from_r2
 
 # 허용 파일 확장자
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -87,12 +88,9 @@ def save_uploaded_file(file, allowed=None):
     # 저장용 고유 파일명 (UUID 기반)
     unique_filename = f"{uuid.uuid4().hex}.{ext}"
 
-    # 저장 경로 (dist/uploads)
-    upload_folder = os.path.join(current_app.root_path, 'dist', 'uploads')
-    os.makedirs(upload_folder, exist_ok=True)
-
-    filepath = os.path.join(upload_folder, unique_filename)
-    file.save(filepath)
+    # R2에 업로드
+    file_data = file.read()
+    upload_to_r2(file_data, unique_filename, file.content_type)
 
     # File 레코드 생성
     file_record = File(
@@ -154,13 +152,8 @@ def save_base64_image(base64_data):
         unique_filename = f"{uuid.uuid4().hex}.{ext}"
         original_filename = f"pasted_image.{ext}"
 
-        # 저장 경로 (dist/uploads)
-        upload_folder = os.path.join(current_app.root_path, 'dist', 'uploads')
-        os.makedirs(upload_folder, exist_ok=True)
-
-        filepath = os.path.join(upload_folder, unique_filename)
-        with open(filepath, 'wb') as f:
-            f.write(image_data)
+        # R2에 업로드
+        upload_to_r2(image_data, unique_filename, mimetype)
 
         # File 레코드 생성
         file_record = File(
@@ -214,20 +207,17 @@ def cleanup_orphaned_images(old_content, new_content):
         # URL에서 파일명 추출 (예: /uploads/abc123.jpg -> abc123.jpg)
         filename = url.replace('/uploads/', '')
 
-        # 파일 경로 (dist/uploads 기준)
-        filepath = os.path.join(current_app.root_path, 'dist', 'uploads', filename)
-
         try:
-            if os.path.exists(filepath):
-                os.remove(filepath)
-                deleted_count += 1
+            # R2에서 삭제
+            delete_from_r2(filename)
+            deleted_count += 1
 
-                # File 레코드도 삭제
-                file_record = File.query.filter_by(filename=filename).first()
-                if file_record:
-                    db.session.delete(file_record)
+            # File 레코드도 삭제
+            file_record = File.query.filter_by(filename=filename).first()
+            if file_record:
+                db.session.delete(file_record)
         except Exception as e:
-            print(f"이미지 삭제 실패: {filepath} - {e}")
+            print(f"이미지 삭제 실패: {filename} - {e}")
 
     return deleted_count
 
@@ -243,10 +233,8 @@ def delete_file_record(file_record):
         return False
 
     try:
-        # 실제 파일 삭제
-        filepath = os.path.join(current_app.root_path, 'dist', 'uploads', file_record.filename)
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        # R2에서 삭제
+        delete_from_r2(file_record.filename)
 
         # DB 레코드 삭제
         db.session.delete(file_record)
@@ -274,20 +262,17 @@ def cleanup_all_content_images(content):
         # URL에서 파일명 추출
         filename = url.replace('/uploads/', '')
 
-        # 파일 경로
-        filepath = os.path.join(current_app.root_path, 'dist', 'uploads', filename)
-
         try:
-            if os.path.exists(filepath):
-                os.remove(filepath)
-                deleted_count += 1
+            # R2에서 삭제
+            delete_from_r2(filename)
+            deleted_count += 1
 
-                # File 레코드도 삭제
-                file_record = File.query.filter_by(filename=filename).first()
-                if file_record:
-                    db.session.delete(file_record)
+            # File 레코드도 삭제
+            file_record = File.query.filter_by(filename=filename).first()
+            if file_record:
+                db.session.delete(file_record)
         except Exception as e:
-            print(f"이미지 삭제 실패: {filepath} - {e}")
+            print(f"이미지 삭제 실패: {filename} - {e}")
 
     return deleted_count
 

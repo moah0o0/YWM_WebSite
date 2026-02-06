@@ -47,10 +47,15 @@ def create_app():
     # 템플릿 필터 등록
     @app.template_filter('fix_upload_urls')
     def fix_upload_urls(content):
-        """레거시 /static/uploads/ 경로를 /uploads/로 변환"""
+        """업로드 경로를 R2 공개 URL로 변환"""
         if not content:
             return content
-        return content.replace('/static/uploads/', '/uploads/')
+        r2_url = Config.R2_PUBLIC_URL
+        # 레거시 경로 변환: /static/uploads/ → R2 URL
+        content = content.replace('/static/uploads/', f'{r2_url}/')
+        # 현재 경로 변환: /uploads/ → R2 URL
+        content = content.replace('/uploads/', f'{r2_url}/')
+        return content
 
     # Jinja2 환경 설정
     app.jinja_env.globals['STATIC_DOMAIN'] = Config.STATIC_DOMAIN
@@ -109,9 +114,15 @@ def copy_static_files():
 
 
 def save_html(path, content):
-    """HTML 파일 저장"""
+    """HTML 파일 저장 (업로드 경로를 R2 URL로 변환)"""
     full_path = os.path.join(Config.DIST_DIR, path)
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
+
+    # 모든 업로드 경로를 R2 공개 URL로 변환
+    r2_url = Config.R2_PUBLIC_URL
+    if r2_url:
+        content = content.replace('/static/uploads/', f'{r2_url}/')
+        content = content.replace('/uploads/', f'{r2_url}/')
 
     with open(full_path, 'w', encoding='utf-8') as f:
         f.write(content)
@@ -648,9 +659,6 @@ def build_cf_headers():
     """Cloudflare Pages _headers 파일 생성"""
     headers_content = """/static/*
   Cache-Control: public, max-age=31536000, immutable
-
-/uploads/*
-  Cache-Control: public, max-age=31536000
 
 /*.html
   Cache-Control: public, max-age=3600, must-revalidate

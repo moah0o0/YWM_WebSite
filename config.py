@@ -39,6 +39,15 @@ class Config:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'}
 
     # ============================================
+    # Cloudflare R2 설정
+    # ============================================
+    R2_ACCOUNT_ID = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '')
+    R2_ACCESS_KEY_ID = os.environ.get('R2_ACCESS_KEY_ID', '')
+    R2_SECRET_ACCESS_KEY = os.environ.get('R2_SECRET_ACCESS_KEY', '')
+    R2_BUCKET_NAME = os.environ.get('R2_BUCKET_NAME', 'withmigrant-uploads')
+    R2_PUBLIC_URL = os.environ.get('R2_PUBLIC_URL', 'https://uploads.withmigrant.or.kr')
+
+    # ============================================
     # 이메일 설정
     # ============================================
     DONATION_EMAIL = os.environ.get('DONATION_EMAIL') or 'happysoli@hanmail.net'
